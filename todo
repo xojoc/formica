@@ -1,0 +1,8 @@
+remove Rule.Copy
+dependencies doesn't work if file is removed
+favicon
+multiple outputs
+markdownLinks (mergeInput)
+next/prev
+exec, copy, tpl
+check collisions not of `slug' but of `out'
