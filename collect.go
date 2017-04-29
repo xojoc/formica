@@ -18,7 +18,6 @@ package main
 import (
 	"bufio"
 	"bytes"
-	yaml "gopkg.in/yaml.v2"
 	htpl "html/template"
 	"io"
 	"log"
@@ -27,6 +26,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	yaml "gopkg.in/yaml.v2"
 )
 
 func openBuf(i *item) {
@@ -74,7 +75,7 @@ func metaFromPath(i *item) {
 		if t != "" {
 			i, err := strconv.ParseInt(t, 10, 32)
 			if err != nil {
-				log.Fatal(err)
+				return false, 0
 			}
 			return true, int(i)
 		} else {
@@ -124,7 +125,7 @@ func getHeader(i *item) []byte {
 	for {
 		l, err := i.buf.ReadBytes('\n')
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("%s: %v\n", i.inpath, err)
 		}
 		if err == io.EOF {
 			log.Fatalf("%q: got EOF while parsing header", i.inpath)
@@ -191,10 +192,10 @@ func fileToItem(f string, r *rule) *item {
 	// FIXME
 	if i.r.NoHeader == false {
 		if i.Title == "" {
-			log.Fatalf("item %q has no `Title`", i.inpath)
+			log.Printf("item %q has no `Title`", i.inpath)
 		}
 		if i.Slug == "" {
-			log.Fatalf("item %q has no `Slug`", i.inpath)
+			log.Printf("item %q has no `Slug`", i.inpath)
 		}
 		if i.Id < 0 {
 			log.Printf("item %q has no `Id`", i.inpath)
@@ -217,6 +218,7 @@ func fileToItem(f string, r *rule) *item {
 		}
 		i.outpath = buildDir + b.String()
 	}
+	i.outpath = filepath.Clean(i.outpath)
 
 	return i
 }
@@ -229,10 +231,10 @@ func collectItem(f string, info os.FileInfo, err error) error {
 		return nil
 	}
 	for _, s := range AllSections {
+		if s.Dir == "." && strings.IndexByte(f, '/') == -1 {
+			f = "./" + f
+		}
 		for _, r := range s.Rules {
-			if s.Dir == "." && strings.IndexByte(f, '/') == -1 {
-				f = "./" + f
-			}
 			if r.inre.MatchString(f) {
 				i := fileToItem(f, r)
 				if r.copy {

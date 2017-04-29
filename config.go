@@ -16,12 +16,13 @@
 package main
 
 import (
-	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"regexp"
 	"strings"
 	"text/template"
+
+	yaml "gopkg.in/yaml.v2"
 )
 
 const (
@@ -81,10 +82,11 @@ func parseConfig() {
 		if s.Rules == nil {
 			log.Fatalf("no `rules` specified for section n. %d (%q)\n", si+1, s.Dir)
 		}
-		if s.Title == "" {
-			//			log.Printf("no `title` specified for section n. %d (%q)\n", si+1, s.Dir)
-			s.Title = "(no title)"
-		}
+		/*
+			if s.Title == "" {
+				s.Title = "(no title)"
+			}
+		*/
 		if s.Style == "" {
 			s.Style = styleDef
 		}

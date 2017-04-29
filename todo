@@ -6,3 +6,4 @@ markdownLinks (mergeInput)
 next/prev
 exec, copy, tpl
 check collisions not of `slug' but of `out'
+clean _build

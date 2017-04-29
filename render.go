@@ -16,15 +16,19 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	htpl "html/template"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"time"
+
+	"xojoc.pw/util"
 )
 
 const baseDir = "/"
@@ -64,6 +68,9 @@ func (s *sectionContext) RootURL() string {
 }
 func (s *sectionContext) HomeTitle() string {
 	return s.Title
+}
+func (s *sectionContext) GoPath() string {
+	return ""
 }
 func (s *sectionContext) Include() htpl.HTML {
 	fs, err := filepath.Glob(stylePath(s.section.Style) + "*.css")
@@ -119,6 +126,9 @@ func (t *tagContext) HomeTitle() string {
 func (t *tagContext) Include() htpl.HTML {
 	return t.Items[0].Include()
 }
+func (s *tagContext) GoPath() string {
+	return ""
+}
 
 type itemContext struct {
 	Id      int
@@ -128,6 +138,10 @@ type itemContext struct {
 	Tags    []*tagContext
 	User    map[string]interface{}
 	Section *sectionContext
+
+	GoPath          string
+	GoCode          string
+	GoDocumentation string
 
 	item *item
 }
@@ -151,6 +165,9 @@ func contextFromItem(i *item, s *sectionContext) *itemContext {
 
 	ictx.item = i
 	ictx.Section = s
+
+	ictx.GoPath = i.GoPath
+	ictx.GoCode = i.GoCode
 
 	return ictx
 }
@@ -248,6 +265,14 @@ func renderAll() {
 		seenOutpaths := make(map[string]*item)
 
 		for _, i := range s.items {
+			if i.GoPath != "" {
+				f := util.MustOpen(os.Getenv("GOPATH") + "/src/" + i.GoPath + "/README.md")
+				i.buf = bufio.NewReader(io.MultiReader(f, i.buf))
+				if i.Title == "" {
+					i.Title = i.GoPath
+				}
+			}
+
 			if filepath.Base(i.outpath) == "index.html" {
 				hasIndex = true
 			}

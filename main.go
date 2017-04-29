@@ -26,15 +26,18 @@ import (
 )
 
 type item struct {
-	Id    int
-	Title string
-	Slug  string
-	Date  interface{} // go-yaml is buggy, so we must deal with dates ourselfs
-	Year  int
-	Month int
-	Day   int
-	Tags  []string
-	User  map[string]interface{} // user variables
+	Id              int
+	Title           string
+	Slug            string
+	Date            interface{} // go-yaml is buggy, so we must deal with dates ourselfs
+	Year            int
+	Month           int
+	Day             int
+	Tags            []string
+	GoPath          string
+	GoCode          string
+	GoDocumentation string
+	User            map[string]interface{} // user variables
 
 	inpath  string
 	outpath string
