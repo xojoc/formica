@@ -28,7 +28,7 @@ import (
 	"strings"
 	"time"
 
-	"xojoc.pw/util"
+	"xojoc.pw/must"
 )
 
 const baseDir = "/"
@@ -266,7 +266,7 @@ func renderAll() {
 
 		for _, i := range s.items {
 			if i.GoPath != "" {
-				f := util.MustOpen(os.Getenv("GOPATH") + "/src/" + i.GoPath + "/README.md")
+				f := must.Open(os.Getenv("GOPATH") + "/src/" + i.GoPath + "/README.md")
 				i.buf = bufio.NewReader(io.MultiReader(f, i.buf))
 				if i.Title == "" {
 					i.Title = i.GoPath
