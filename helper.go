@@ -22,6 +22,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -33,7 +34,6 @@ func execShellIO(cmdstr string, in io.Reader, out io.Writer, stderr io.Writer) {
 		cmd.Stderr = stderr
 	} else {
 		cmd.Stderr = os.Stderr
-		//cmd.Stderr = stderr
 	}
 	err := cmd.Run()
 	if err != nil {
@@ -89,25 +89,28 @@ type multiSorter struct {
 	less  []lessFunc
 }
 
-func (ms *multiSorter) Sort(items []*item) {
+func (ms multiSorter) Sort(items []*item) {
 	ms.items = items
 	sort.Sort(ms)
 }
 
-func SortBy(less ...lessFunc) *multiSorter {
-	return &multiSorter{
-		less: less,
+var _ sort.Interface = multiSorter{}
+
+func SortBy(items []*item, less ...lessFunc) multiSorter {
+	return multiSorter{
+		items: items,
+		less:  less,
 	}
 }
 
-func (ms *multiSorter) Len() int {
+func (ms multiSorter) Len() int {
 	return len(ms.items)
 }
-func (ms *multiSorter) Swap(i, j int) {
+func (ms multiSorter) Swap(i, j int) {
 	ms.items[i], ms.items[j] = ms.items[j], ms.items[i]
 }
 
-func (ms *multiSorter) Less(i, j int) bool {
+func (ms multiSorter) Less(i, j int) bool {
 	i1, i2 := ms.items[i], ms.items[j]
 	var k int
 	for k = 0; k < len(ms.less)-1; k++ {
@@ -191,9 +194,15 @@ func userCmp(key string) lessFunc {
 	}
 }
 
+// fixme: reverse sorting works only with one key
 func SortItemsBy(items []*item, keys ...string) []*item {
+	reverse := false
 	less := make([]lessFunc, 0)
 	for _, k := range keys {
+		if strings.HasPrefix(k, "-") {
+			reverse = true
+			k = k[1:]
+		}
 		switch k {
 		case "id":
 			less = append(less, idCmp)
@@ -205,6 +214,10 @@ func SortItemsBy(items []*item, keys ...string) []*item {
 			less = append(less, userCmp(k))
 		}
 	}
-	SortBy(less...).Sort(items)
+	var s sort.Interface = SortBy(items, less...)
+	if reverse {
+		s = sort.Reverse(s)
+	}
+	sort.Sort(s)
 	return items
 }

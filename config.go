@@ -90,6 +90,11 @@ func parseConfig() {
 		if s.Style == "" {
 			s.Style = styleDef
 		}
+
+		if s.IndexSort == "" {
+			s.IndexSort = "id"
+		}
+
 		for ri, r := range s.Rules {
 			r.s = s
 

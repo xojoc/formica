@@ -74,6 +74,7 @@ func DateFormat(d *time.Time, layout string) string {
 }
 
 // FIXME: copy assets, favicon, etc.
+
 func copyCss() {
 	for _, s := range AllSections {
 		fs, err := filepath.Glob(stylePath(s.Style) + "*.css")

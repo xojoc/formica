@@ -21,6 +21,7 @@ import (
 	"fmt"
 	htpl "html/template"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -28,10 +29,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gorilla/feeds"
 	"xojoc.pw/must"
 )
 
-const baseDir = "/"
+const (
+	baseDir  = "/"
+	rssPath  = "/rss"
+	atomPath = "/atom"
+)
 
 type sectionContext struct {
 	Dir   string
@@ -60,8 +66,14 @@ func (s *sectionContext) PageTitle() string {
 func (s *sectionContext) AbsoluteURL() string {
 	return baseDir + s.Dir
 }
+func (s *sectionContext) FeedURL() string {
+	if s.section.Feed {
+		return baseDir + s.Dir + atomPath
+	}
+	return ""
+}
 func (s *sectionContext) HomeURL() string {
-	return s.AbsoluteURL()
+	return filepath.Clean(s.AbsoluteURL())
 }
 func (s *sectionContext) RootURL() string {
 	return baseDir
@@ -97,6 +109,11 @@ func (s *sectionContext) Include() htpl.HTML {
 		str += fmt.Sprintf(`<script type="text/javascript" src="%s"></script>`, i)
 	}
 
+	if s.section.Feed {
+		str += fmt.Sprintf(`<link rel="alternate" type="application/rss+xml" href="%s%s" />`, s.AbsoluteURL(), rssPath)
+		str += fmt.Sprintf(`<link rel="alternate" type="application/atom+xml" href="%s%s" />`, s.AbsoluteURL(), atomPath)
+	}
+
 	return htpl.HTML(str)
 }
 
@@ -110,6 +127,9 @@ func contextFromTag(tag string, items []*itemContext) *tagContext {
 }
 func (t *tagContext) AbsoluteURL() string {
 	return t.Items[0].Section.AbsoluteURL() + "/tag/" + t.Tag + ".html"
+}
+func (t *tagContext) FeedURL() string {
+	return t.Items[0].FeedURL()
 }
 func (t *tagContext) PageTitle() string {
 	return t.Tag + " - " + t.Items[0].Section.Title
@@ -175,6 +195,9 @@ func contextFromItem(i *item, s *sectionContext) *itemContext {
 func (i *itemContext) AbsoluteURL() string {
 	return baseDir + strings.TrimPrefix(i.item.outpath, buildDir)
 }
+func (i *itemContext) FeedURL() string {
+	return i.Section.FeedURL()
+}
 func (i *itemContext) PageTitle() string {
 	return i.Title + " - " + i.Section.Title
 }
@@ -211,6 +234,39 @@ func outputTemplate(tplname, outpath, style string, cx interface{}) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func outputFeeds(s *sectionContext) {
+	now := time.Now()
+	feed := &feeds.Feed{
+		Title:   s.HomeTitle() + " - Xojoc",
+		Link:    &feeds.Link{Href: s.AbsoluteURL()},
+		Created: now,
+	}
+	for _, i := range s.Items {
+		var date time.Time
+		if i.Date != nil {
+			date = *i.Date
+		}
+		feed.Items = append(feed.Items, &feeds.Item{
+			Title:   i.Title,
+			Link:    &feeds.Link{Href: i.AbsoluteURL()},
+			Created: date,
+		})
+	}
+
+	sort.Slice(feed.Items, func(i, j int) bool {
+		return feed.Items[i].Created.After(feed.Items[j].Created)
+	})
+
+	atom, err := feed.ToAtom()
+	must.OK(err)
+
+	rss, err := feed.ToRss()
+	must.OK(err)
+
+	must.OK(ioutil.WriteFile(buildDir+s.Dir+atomPath, []byte(atom), 0755))
+	must.OK(ioutil.WriteFile(buildDir+s.Dir+rssPath, []byte(rss), 0755))
 }
 
 func (i *item) needsUpdate() bool {
@@ -290,9 +346,12 @@ func renderAll() {
 		}
 
 		if !hasIndex {
-			SortItemsBy(s.items, "id")
+			SortItemsBy(s.items, s.IndexSort)
 			outputTemplate("index.html", buildDir+s.Dir+"/index.html", s.Style, contextFromSection(s))
+		}
 
+		if s.Feed {
+			outputFeeds(sctx)
 		}
 	}
 }

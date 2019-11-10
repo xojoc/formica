@@ -1,3 +1,4 @@
+invalidate cache when config changed
 remove Rule.Copy
 dependencies doesn't work if file is removed
 favicon

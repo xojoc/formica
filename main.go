@@ -68,6 +68,8 @@ type section struct {
 	Style      string
 	IncludeCSS []string
 	IncludeJS  []string
+	IndexSort  string
+	Feed       bool
 
 	items []*item
 }
