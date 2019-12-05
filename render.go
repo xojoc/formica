@@ -126,7 +126,7 @@ func contextFromTag(tag string, items []*itemContext) *tagContext {
 	return &tagContext{Tag: tag, Items: items}
 }
 func (t *tagContext) AbsoluteURL() string {
-	return t.Items[0].Section.AbsoluteURL() + "/tag/" + t.Tag + ".html"
+	return t.Items[0].Section.AbsoluteURL() + "/tag/" + t.Tag
 }
 func (t *tagContext) FeedURL() string {
 	return t.Items[0].FeedURL()
@@ -193,7 +193,7 @@ func contextFromItem(i *item, s *sectionContext) *itemContext {
 }
 
 func (i *itemContext) AbsoluteURL() string {
-	return baseDir + strings.TrimPrefix(i.item.outpath, buildDir)
+	return baseDir + strings.TrimSuffix(strings.TrimPrefix(i.item.outpath, buildDir), ".html")
 }
 func (i *itemContext) FeedURL() string {
 	return i.Section.FeedURL()
