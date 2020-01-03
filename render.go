@@ -44,7 +44,7 @@ type sectionContext struct {
 	Title string
 	Tags  []*tagContext
 	Items []*itemContext
-	TagsContext boolean
+	TagsContext bool
 
 	section *section
 }
