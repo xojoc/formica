@@ -44,6 +44,7 @@ type sectionContext struct {
 	Title string
 	Tags  []*tagContext
 	Items []*itemContext
+	TagsContext boolean
 
 	section *section
 }
@@ -67,6 +68,9 @@ func (s *sectionContext) AbsoluteURL() string {
 	p := filepath.Clean(baseDir + s.Dir)
 	if p == "/" {
 		return p
+	}
+	if s.TagsContext {
+		return p + "/tags"
 	}
 	return p + "/"
 }
@@ -319,7 +323,9 @@ func renderAll() {
 			tsctx = append(tsctx, tctx)
 		}
 		sctx.Tags = tsctx
+		sctx.TagsContext = true
 		outputTemplate("tags.html", buildDir+s.Dir+"/tags.html", s.Style, sctx)
+		sctx.TagsContext = false
 
 		hasIndex := false
 		seenOutpaths := make(map[string]*item)
