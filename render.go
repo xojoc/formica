@@ -64,7 +64,7 @@ func (s *sectionContext) PageTitle() string {
 	return s.Title
 }
 func (s *sectionContext) AbsoluteURL() string {
-	return baseDir + s.Dir
+	return filepath.Clean( baseDir + s.Dir + "/")
 }
 func (s *sectionContext) FeedURL() string {
 	if s.section.Feed {
