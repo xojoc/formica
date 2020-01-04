@@ -312,7 +312,7 @@ func renderAll() {
 		for k, _ := range tags {
 			tagnames = append(tagnames, k)
 		}
-		sort.Strings(tagnames)
+		sort.Slice(tagnames, func(i, j int) bool { return strings.ToLower(tagnames[i]) < strings.ToLower(tagnames[j]) })
 		for _, tagname := range tagnames {
 			var is []*itemContext
 			for _, item := range tags[tagname] {
