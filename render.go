@@ -81,7 +81,11 @@ func (s *sectionContext) FeedURL() string {
 	return ""
 }
 func (s *sectionContext) HomeURL() string {
-	return filepath.Clean(s.AbsoluteURL())
+	p := filepath.Clean(s.AbsoluteURL())
+	if s.TagsContext {
+		p = strings.TrimSuffix(p, "tags")
+	}
+	return p
 }
 func (s *sectionContext) RootURL() string {
 	return baseDir
@@ -135,7 +139,7 @@ func contextFromTag(tag string, items []*itemContext) *tagContext {
 }
 func (t *tagContext) AbsoluteURL() string {
 	p := t.Items[0].Section.AbsoluteURL()
-	if strings.HasSuffix(p, "/tags/") {
+	if strings.HasSuffix(p, "/tags") {
 		p = p + "/.."
 	}
 	return filepath.Clean(p + "/tag/" + t.Tag)
