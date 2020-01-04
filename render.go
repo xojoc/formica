@@ -134,7 +134,11 @@ func contextFromTag(tag string, items []*itemContext) *tagContext {
 	return &tagContext{Tag: tag, Items: items}
 }
 func (t *tagContext) AbsoluteURL() string {
-	return t.Items[0].Section.AbsoluteURL() + "/tag/" + t.Tag
+	p := t.Items[0].Section.AbsoluteURL()
+	if strings.HasSuffix(p, "/tags/") {
+		p = p + "/.."
+	}
+	return filepath.Clean(p + "/tag/" + t.Tag)
 }
 func (t *tagContext) FeedURL() string {
 	return t.Items[0].FeedURL()
