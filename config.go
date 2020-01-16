@@ -74,10 +74,12 @@ func parseConfig() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	tmp := AllSections[:0]
 	// Check mandatory fields and set defaults.
 	for si, s := range AllSections {
 		if s.Dir == "" {
-			log.Fatalf("no `dir` specified for section n. %d\n", si+1)
+			Config.SiteURL = s.URL
+			continue
 		}
 		if s.Rules == nil {
 			log.Fatalf("no `rules` specified for section n. %d (%q)\n", si+1, s.Dir)
@@ -120,5 +122,8 @@ func parseConfig() {
 			r.inre = pathToRe(r.In, dir)
 			r.outtpl = pathToTpl(r.Out, dir)
 		}
+		tmp = append(tmp, s)
 	}
+
+	AllSections = tmp
 }

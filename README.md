@@ -1,1 +1,1 @@
-The static site generator used to build https://xojoc.pw
+The static site generator used to build [my site](https://xojoc.pw).

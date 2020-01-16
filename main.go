@@ -28,6 +28,7 @@ import (
 type item struct {
 	Id              int
 	Title           string
+	Excerpt         string
 	Slug            string
 	Date            interface{} // go-yaml is buggy, so we must deal with dates ourselfs
 	Year            int
@@ -62,9 +63,11 @@ type rule struct {
 }
 
 type section struct {
+	URL        string
 	Dir        string
 	Rules      []*rule
 	Title      string
+	Excerpt    string
 	Style      string
 	IncludeCSS []string
 	IncludeJS  []string
@@ -75,6 +78,10 @@ type section struct {
 }
 
 var AllSections []*section
+
+var Config struct {
+	SiteURL string
+}
 
 const buildDir = "_build/"
 

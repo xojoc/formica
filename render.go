@@ -40,10 +40,11 @@ const (
 )
 
 type sectionContext struct {
-	Dir   string
-	Title string
-	Tags  []*tagContext
-	Items []*itemContext
+	Dir         string
+	Title       string
+	Excerpt     string
+	Tags        []*tagContext
+	Items       []*itemContext
 	TagsContext bool
 
 	section *section
@@ -53,6 +54,7 @@ func contextFromSection(s *section) *sectionContext {
 	sctx := &sectionContext{}
 	sctx.Dir = s.Dir
 	sctx.Title = s.Title
+	sctx.Excerpt = s.Excerpt
 	var is []*itemContext
 	for _, i := range s.items {
 		is = append(is, contextFromItem(i, sctx))
@@ -130,8 +132,9 @@ func (s *sectionContext) Include() htpl.HTML {
 }
 
 type tagContext struct {
-	Tag   string
-	Items []*itemContext
+	Tag     string
+	Items   []*itemContext
+	Excerpt string
 }
 
 func contextFromTag(tag string, items []*itemContext) *tagContext {
@@ -162,13 +165,14 @@ func (t *tagContext) HomeTitle() string {
 func (t *tagContext) Include() htpl.HTML {
 	return t.Items[0].Include()
 }
-func (s *tagContext) GoPath() string {
+func (t *tagContext) GoPath() string {
 	return ""
 }
 
 type itemContext struct {
 	Id      int
 	Title   string
+	Excerpt string
 	Slug    string
 	Date    *time.Time
 	Tags    []*tagContext
@@ -186,6 +190,7 @@ func contextFromItem(i *item, s *sectionContext) *itemContext {
 	ictx := &itemContext{}
 	ictx.Id = i.Id
 	ictx.Title = i.Title
+	ictx.Excerpt = i.Excerpt
 	if i.Date == nil {
 		ictx.Date = nil
 	} else {
@@ -306,9 +311,28 @@ func (i *item) needsUpdate() bool {
 	return false
 }
 
+func outputSitemap(sitemap []string) {
+	f := must.Create(buildDir + "/sitemap.xml")
+	_, err := f.WriteString(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">` + "\n")
+	must.OK(err)
+
+	for _, l := range sitemap {
+		_, err := f.WriteString(`<url><loc>` + Config.SiteURL + l + `</loc></url>` + "\n")
+		must.OK(err)
+	}
+
+	_, err = f.WriteString(`</urlset>` + "\n")
+	must.OK(err)
+	must.Close(f)
+}
+
 func renderAll() {
+	var sitemap []string
+
 	for _, s := range AllSections {
 		sctx := contextFromSection(s)
+		sitemap = append(sitemap, sctx.AbsoluteURL())
 		tags := make(map[string][]*item)
 		for _, i := range s.items {
 			for _, t := range i.Tags {
@@ -329,6 +353,8 @@ func renderAll() {
 			tctx := contextFromTag(tagname, is)
 			outputTemplate("tag.html", buildDir+s.Dir+"/tag/"+tagname+".html", s.Style, tctx)
 			tsctx = append(tsctx, tctx)
+
+			sitemap = append(sitemap, tctx.AbsoluteURL())
 		}
 		sctx.Tags = tsctx
 		sctx.TagsContext = true
@@ -357,10 +383,12 @@ func renderAll() {
 				seenOutpaths[i.outpath] = i
 			}
 
+			icx := contextFromItem(i, sctx)
 			if i.needsUpdate() {
-				icx := contextFromItem(i, sctx)
 				outputTemplate("single.html", i.outpath, s.Style, icx)
 			}
+
+			sitemap = append(sitemap, icx.AbsoluteURL())
 		}
 
 		if !hasIndex {
@@ -372,4 +400,6 @@ func renderAll() {
 			outputFeeds(sctx)
 		}
 	}
+
+	outputSitemap(sitemap)
 }
