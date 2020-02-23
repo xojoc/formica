@@ -201,6 +201,7 @@ func contextFromItem(i *item, s *sectionContext) *itemContext {
 	for _, tag := range i.Tags {
 		tags = append(tags, contextFromTag(tag, []*itemContext{ictx}))
 	}
+	sort.Slice(tags, func(i, j int) bool { return strings.ToLower(tags[i].Tag) < strings.ToLower(tags[j].Tag) })
 	ictx.Tags = tags
 	ictx.User = i.User
 
@@ -347,7 +348,9 @@ func renderAll() {
 		sort.Slice(tagnames, func(i, j int) bool { return strings.ToLower(tagnames[i]) < strings.ToLower(tagnames[j]) })
 		for _, tagname := range tagnames {
 			var is []*itemContext
-			for _, item := range tags[tagname] {
+			items :=  tags[tagname]
+			SortItemsBy(items, s.IndexSort)
+			for _, item := range items {
 				is = append(is, contextFromItem(item, sctx))
 			}
 			tctx := contextFromTag(tagname, is)
