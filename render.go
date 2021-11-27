@@ -342,14 +342,14 @@ func renderAll() {
 		}
 		var tsctx []*tagContext
 		var tagnames []string
-		for k, _ := range tags {
+		for k := range tags {
 			tagnames = append(tagnames, k)
 		}
 		sort.Slice(tagnames, func(i, j int) bool { return strings.ToLower(tagnames[i]) < strings.ToLower(tagnames[j]) })
 		for _, tagname := range tagnames {
 			var is []*itemContext
 			items :=  tags[tagname]
-			SortItemsBy(items, s.IndexSort)
+			SortItemsBy(items, strings.Split(s.IndexSort, ",")...)
 			for _, item := range items {
 				is = append(is, contextFromItem(item, sctx))
 			}
@@ -395,7 +395,7 @@ func renderAll() {
 		}
 
 		if !hasIndex {
-			SortItemsBy(s.items, s.IndexSort)
+			SortItemsBy(s.items, strings.Split(s.IndexSort, ",")...)
 			outputTemplate("index.html", buildDir+s.Dir+"/index.html", s.Style, contextFromSection(s))
 		}
 

@@ -194,7 +194,6 @@ func userCmp(key string) lessFunc {
 	}
 }
 
-// fixme: reverse sorting works only with one key
 func SortItemsBy(items []*item, keys ...string) []*item {
 	reverse := false
 	less := make([]lessFunc, 0)
