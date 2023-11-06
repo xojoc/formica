@@ -227,7 +227,7 @@ func collectItem(f string, info os.FileInfo, err error) error {
 	if err != nil {
 		return err
 	}
-	if info.IsDir() {
+	if !info.Mode().IsRegular() {
 		return nil
 	}
 	for _, s := range AllSections {

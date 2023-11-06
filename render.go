@@ -348,7 +348,7 @@ func renderAll() {
 		sort.Slice(tagnames, func(i, j int) bool { return strings.ToLower(tagnames[i]) < strings.ToLower(tagnames[j]) })
 		for _, tagname := range tagnames {
 			var is []*itemContext
-			items :=  tags[tagname]
+			items := tags[tagname]
 			SortItemsBy(items, strings.Split(s.IndexSort, ",")...)
 			for _, item := range items {
 				is = append(is, contextFromItem(item, sctx))
